@@ -18,12 +18,32 @@ Yellow='\033[0;33m'       # Yellow
 Purple='\033[0;35m'       # Purple
 Cyan='\033[0;36m'         # Cyan
 bold='\033[1m'
+silent='-qq -o Dpkg::Use-Pty=0'
+# Yep, this option is undocumented. We could pipe the output to null/zero but this is dirty work.However this doesn't work everytime.
+
+#todo check platform?
 
 if [ "$EUID" -ne 0 ]; then 
     echo -e "$Red$bold$sname$rs Script must be run with root permissions."; exit
 else
     echo -e "$Cyan$bold$sname$rs is starting.."
 fi
+
+pkgList="wget zip"
+
+echo -e "$Cyan$bold$sname$rs$Cyan Updating System.. $Color_Off"
+apt $silent update && apt $silent upgrade
+
+echo -e "$Cyan$bold$sname$rs Installing required packages.. $Color_Off"
+for i in $pkgList; do
+    if [ dpkg -l $i ]; then
+        echo -e "$Yellow$bold$sname$rs $i seems to be alreaady installed! $Color_Off"
+    else
+        apt $silent install $i -y > /dev/zero
+    fi
+done
+
+# TODO: suite 
 
 #install wget to dowload file and zip to unzip
 apt install wget zip -y
