@@ -57,19 +57,21 @@ echo -e "$Cyan \n Installing Apache2 $Color_Off"
 apt install apache2 -y
 
 echo -e "$Cyan \n Installing PHP & Requirements $Color_Off"
+<<<<<<< HEAD
 echo "deb http://packages.dotdeb.org jessie all" > /etc/apt/sources.list.d/dotdeb.list
 wget -O- https://www.dotdeb.org/dotdeb.gpg | apt-key add - apt update
+=======
+wget -q https://packages.sury.org/php/apt.gpg -O- | apt-key add -
+echo "deb https://packages.sury.org/php/ stretch main" | tee /etc/apt/sources.list.d/php.list
+>>>>>>> d9998f4c1733172de52a0359df7da9bd4d7eaa70
 apt update -y
-
 #if error sudo apt install ca-certificates apt-transport-https
 apt install php7.0 libapache2-mod-php7.0 php7.0-mysql php7.0-curl php7.0-json php7.0-gd php7.0-mcrypt php7.0-msgpack php7.0-memcached php7.0-intl php7.0-sqlite3 php7.0-gmp php7.0-geoip php7.0-mbstring php7.0-xml php7.0-zip
-
 echo -e "$Cyan \n Installing MySQL $Color_Off"
 apt install mysql-server -y
 
 echo -e "$Cyan \n Verifying installs$Color_Off"
-apt install apache2 php7.2 php7.2-cli php7.2-common php7.2-opcache php7.2-curl php7.2-mbstring php7.2-mysql php7.2-zip php7.2-xml -y
-
+apt install apache2
 #install wordpress
 echo "create database wordpress" >>f.sql
 mysql -u root < f.sql
