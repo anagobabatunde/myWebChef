@@ -32,18 +32,16 @@ fi
 pkgList="wget zip"
 
 echo -e "$Cyan$bold$sname$rs$Cyan Updating System.. $Color_Off"
-apt $silent update && apt $silent upgrade
+# apt $silent update && apt $silent upgrade
 
 echo -e "$Cyan$bold$sname$rs Installing required packages.. $Color_Off"
 for i in $pkgList; do
-    if [ dpkg -l $i ]; then
+    dpkg -s "$i" > /dev/null 2>&1 && {
         echo -e "$Yellow$bold$sname$rs $i seems to be alreaady installed! $Color_Off"
-    else
-        apt $silent install $i -y > /dev/zero
-    fi
+    } || {
+        apt install $i -y > /dev/zero
+    }
 done
-
-# TODO: suite 
 
 #install wget to dowload file and zip to unzip
 apt install wget zip -y
@@ -61,13 +59,12 @@ wget -q https://packages.sury.org/php/apt.gpg -O- | apt-key add -
 echo "deb https://packages.sury.org/php/ stretch main" | tee /etc/apt/sources.list.d/php.list
 apt update -y
 #if error sudo apt install ca-certificates apt-transport-https
-apt install php7.2 php7.2-cli php7.2-common php7.2-opcache php7.2-curl php7.2-mbstring php7.2-mysql php7.2-zip php7.2-xml -y
-
+apt install php7.2 php7.2-cli php7.2-common php7.2-opcache php7.2-curl php7.2-mbstring php7.2-mysql php7.2-zip php7.2-xml -y > /dev/zero
 echo -e "$Cyan \n Installing MySQL $Color_Off"
-apt install mysql-server -y
+apt install mysql-server -y > /dev/zero
 
 echo -e "$Cyan \n Verifying installs$Color_Off"
-apt install apache2 php7.2 php7.2-cli php7.2-common php7.2-opcache php7.2-curl php7.2-mbstring php7.2-mysql php7.2-zip php7.2-xml -y
+apt install apache2 php7.2 php7.2-cli php7.2-common php7.2-opcache php7.2-curl php7.2-mbstring php7.2-mysql php7.2-zip php7.2-xml -y > /dev/zero
 
 #install wordpress
 echo "create database wordpress" >>f.sql
