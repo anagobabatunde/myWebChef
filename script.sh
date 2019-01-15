@@ -89,7 +89,7 @@ echo -e "$Green \n Permissions have been set $Color_Off"
 
 # Restart Apache
 echo -e "$Cyan \n Restarting Apache $Color_Off"
-systemctl restart apache2
+service apache2 restart
 
 #install wordpress script
 
