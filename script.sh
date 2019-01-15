@@ -57,7 +57,7 @@ echo -e "$Cyan \n Installing Apache2 $Color_Off"
 apt install apache2 -y
 
 echo -e "$Cyan \n Installing PHP & Requirements $Color_Off"
-wget -q https://packages.sury.org/php/apt.gpg -O- | sudo apt-key -y add -
+wget -q https://packages.sury.org/php/apt.gpg -O- | apt-key add -
 echo "deb https://packages.sury.org/php/ stretch main" | tee /etc/apt/sources.list.d/php.list
 apt update -y
 #if error sudo apt install ca-certificates apt-transport-https
