@@ -112,9 +112,12 @@ chown -R www-data:www-data $WPPATH
 find $WPPATH -type f -exec chmod 644 {} +
 find $WPPATH -type d -exec chmod 755 {} +
 
-echo -e "\n127.0.0.1    wp.mywebchef.org\n" >> /etc/hosts
-echo -e "\n<VirtualHost *:80>\nServerName $www\nDocumentRoot $WPPATH\nErrorLog ${APACHE_LOG_DIR}/error-wordpress.log\nCustomLog ${APACHE_LOG_DIR}/custom-wordpress.log combined\n</VirtualHost>" > /etc/apache2/sites-available/myWebChef.org
-ln -s /etc/apache2/sites-available/myWebChef.org /etc/apache2/sites-enabled/myWebChef.org
+sed -i "s/127.0.0.1     localhost/127.0.0.1     localhost wp.mywebchef.org/g" >> /etc/hosts
+echo -e "\n<VirtualHost *:80>\nServerName $www\nServerAlias $www\nDocumentRoot $WPPATH\nErrorLog \${APACHE_LOG_DIR}/error-wordpress.log\nCustomLog \${APACHE_LOG_DIR}/custom-wordpress.log combined\n</VirtualHost>" > /etc/apache2/sites-available/myWebChef.org.conf
+a2ensite myWebChef.org
+
+echo -e "\nServerName localhost" > /etc/apache2/conf-available/loc.conf
+a2enconf loc
 
 service apache2 restart
 }
