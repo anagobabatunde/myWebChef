@@ -90,12 +90,19 @@ if ! grep -q "dotdeb" /etc/apt/sources.list; then
         log "E: dotdeb_key has returned $?"
     fi
 fi
-wget -q https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -O /usr/bin/wp
-chmod +x /usr/bin/wp
 
+if ! [ -f /usr/bin/wp ];then
+    wget -q https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -O /usr/bin/wp
+    chmod +x /usr/bin/wp
+fi
+
+if ! [ -f /usr/bin/certbot ]; then
+    wget -q https://dl.eff.org/certbot-auto -O /usr/bin/certbot
+    chmod +x /usr/bin/certbot
+fi
 echo -e "$Cyan$bold$sname$rs Installing required packages.. $Color_Off"
 $upd
-dlPkg "apache2 php7.0 php7.0-cli php7.0-common php7.0-opcache php7.0-curl php7.0-mbstring php7.0-mysql php7.0-zip php7.0-xml mysql-server libapache2-mod-php "
+dlPkg "apache2 php7.0 php7.0-cli php7.0-common php7.0-opcache php7.0-curl php7.0-mbstring php7.0-mysql php7.0-zip php7.0-xml mysql-server libapache2-mod-php python virtualenv"
 }
 
 function wpInst () {
@@ -126,8 +133,15 @@ if ! grep -q "$locH" /etc/hosts ; then
     echo -e "\n$locH" >> /etc/hosts
 fi
 
+if ! [ -d /etc/apache2/ssl ]; then
+    a2enmod ssl
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/apache2/ssl/mywebchef.key -out /etc/apache2/ssl/mywebchef.crt -subj '/CN=localhost' -extensions EXT -config <( printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
+    chmod 600 /etc/apache2/ssl/*
+fi
+
 if ! [ -f /etc/apache2/sites-available/myWebChef.org.conf ] ; then
-    echo -e "\n<VirtualHost *:80>\nServerName $www\nServerAlias $www\nDocumentRoot $WPPATH\nErrorLog \${APACHE_LOG_DIR}/error-wordpress.log\nCustomLog \${APACHE_LOG_DIR}/custom-wordpress.log combined\n</VirtualHost>" > /etc/apache2/sites-available/myWebChef.org.conf
+    echo -e "\n<VirtualHost *:80>\nServerName $www\nServerAlias $www\nDocumentRoot $WPPATH\nErrorLog \${APACHE_LOG_DIR}/error-wordpress.log\nCustomLog \${APACHE_LOG_DIR}/custom-wordpress.log combined\n</VirtualHost>
+<IfModule mod_ssl.c>\n<VirtualHost _default_:443>\nServerName $www:443\nServerAdmin talamo_a@ikf3.com\nDocumentRoot $WPPATH\nErrorLog \${APACHE_LOG_DIR}/error-wordpress.log\nCustomLog \${APACHE_LOG_DIR}/custom-wordpress.log combined\nSSLEngine on\nSSLCertificateFile      /etc/apache2/ssl/mywebchef.crt\nSSLCertificateKeyFile /etc/apache2/ssl/mywebchef.key\n<FilesMatch \"\.(cgi|shtml|phtml|php)$\">\nSSLOptions +StdEnvVars\n</FilesMatch>\n<Directory /usr/lib/cgi-bin>\nSSLOptions +StdEnvVars\n</Directory>\n</VirtualHost>\n</IfModule>" > /etc/apache2/sites-available/myWebChef.org.conf
 fi
 echo -e "$Cyan$sname$bold$rs \c"
 a2ensite myWebChef.org
