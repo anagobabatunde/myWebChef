@@ -150,60 +150,69 @@ chown -R www-data:www-data $WPPATH
 find $WPPATH -type f -exec chmod 644 {} +
 find $WPPATH -type d -exec chmod 755 {} +
 
-
-echo -e "$Cyan$sname$bold$rs \c"
-service apache2 restart > /dev/null
+apachectl configtest
 if [ $? -ne 0 ]; then
-    echo "$Red$bold$sname$rs Fatal: There was an error while trying to configure wordpress. Please retry."
+    echo -e "$Red$bold$sname$rs Fatal: There was an error while trying to configure wordpress. Please retry."
     log "E: wp apache error, $?"
          exit 1;
      else
+        echo -e "$Cyan$sname$bold$rs \c"
+        service apache2 restart > /dev/null
         echo -e "$Green$bold$sname$rs Wordpress is now ready, check it out at wp.mywebchef.org $Color_Off"
 fi
-
-
 }
 
 function awStat () {
     echo -e "$Cyan$bold$sname$rs Installing awstats.. $Color_Off"
     dlPkg "awstats"
      if [ $? -ne 0 ]; then
-        echo "$Red$bold$sname$rs Fatal: could not get awstats. Please do it manually and relaunch the script."
+        echo -e "$Red$bold$sname$rs Fatal: could not get awstats. Please do it manually and relaunch the script."
         log "E: awstats install error $?"
     fi
-    if ! [ -d /var/www/awstats]; then
+    wget -q  https://gist.githubusercontent.com/atikf3/842bfdbc355f8b9b635c572733727b20/raw/b5e242e81dd43f53c94c3ef270b016c06375eff9/awstats.conf -O /etc/awstats/awstats.conf
+        if [ $? -ne 0 ]; then
+            echo -e "$Red$bold$sname$rs Fatal: There was an error while trying to download awstats configuration. Please retry."
+            log "E: awstats wget error $?"
+            exit 1;
+        fi
+   
+    if ! [ -d /var/www/awstats ]; then
         mkdir /var/www/awstats -p
-        ln -s /usr/share/awstats/icon /var/www/awstats/icon
+        ln -s /usr/share/awstats/icon /var/www/awstats/awstats-icon
+        htpasswd -b -c /var/www/awstats/.htpasswd aws password
     fi
     a2enmod authz_groupfile > /dev/null
     if [ $? -ne 0 ]; then
-        echo "$Red$bold$sname$rs Fatal: could not get awstats. Please do it manually and relaunch the script."
+        echo -e "$Red$bold$sname$rs Fatal: could not get awstats. Please do it manually and relaunch the script."
         log "E: awstats install error $?"
         exit 1;
     fi
-    if ! [ -f /etc/apache2/sites-available/awstats.mywebchef.org.conf ]; then
-        echo -e "" > /etc/apache2/sites-available/awstats.mywebchef.org.conf
-        a2ensite awstats.conf > /dev/null
+    wget -q https://gist.githubusercontent.com/atikf3/842bfdbc355f8b9b635c572733727b20/raw/9a19aa38a84cc3880bf01cce56b91ca30864c788/awstats.mywebchef.org.conf -O /etc/apache2/sites-available/awstats.mywebchef.org.conf
+    
+        a2ensite awstats.mywebchef.org.conf > /dev/null
         if [ $? -ne 0 ]; then
-            echo "$Red$bold$sname$rs Fatal: There was an error while trying to apply awstats configuration. Please retry."
+            echo -e "$Red$bold$sname$rs Fatal: There was an error while trying to apply awstats configuration. Please retry."
             log "E: awstats apache conf error $?"
             exit 1;
         fi
-    fi
     dlPkg "cron"
      if [ $? -ne 0 ]; then
-        echo "$Red$bold$sname$rs Fatal: could not get awstats. Please do it manually and relaunch the script."
-        log "E: awstats install error $?"
+        echo -e "$Red$bold$sname$rs Fatal: could not install cron. Please do it manually and relaunch the script."
+        log "E: missing cron $?"
     else
         crontab -l | { cat; echo -e "0 * * * * /usr/lib/cgi-bin/awstats.pl -config=apache -update\n5 * * * * /usr/lib/cgi-bin/awstats.pl -config=apache -output -staticlink > /var/www/awstats/index.html"; } | crontab -
     fi 
 
-    service apache2 restart > /dev/null
+    /usr/lib/cgi-bin/awstats.pl -config=apache -update > /dev/null
+    /usr/lib/cgi-bin/awstats.pl -config=apache -output -staticlink > /var/www/awstats/index.html
+
+    apachectl configtest
     if [ $? -ne 0 ]; then
-            echo "$Red$bold$sname$rs Fatal: There was an error while trying to configure awstats. Please retry."
+            echo -e "$Red$bold$sname$rs Fatal: There was an error while trying to configure awstats. Please retry."
             log "E: awstats apache error $?"
             exit 1;
     else
+        service apache2 restart > /dev/null
         echo -e "$Cyan$bold$sname$rs awstats is now installed, check it out at awstats.mywebchef.org $Color_Off"
     fi
 }
@@ -228,5 +237,4 @@ else
    wpInst 
 fi
 
-
-
+awStat
